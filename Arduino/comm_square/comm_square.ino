@@ -21,7 +21,7 @@ int ypos=0;
 int newpos;
 
 //Difference variable used by posdiff
-int difference=0;
+int motor_direction=0;
 
 BLEPeripheral blePeripheral;  // BLE Peripheral Device (the board you're programming)
 BLEService ledService("19B10000-E8F2-537E-4F6C-D104768A1214"); // BLE LED Service
@@ -33,7 +33,8 @@ const int dir = 12; // pin to use for the LED
 
 void timedBlinkIsr()   // callback function when interrupt is asserted
 {
-  if (num>count){
+  num*=2;
+  if (num>=count){
     digitalWrite(13, toggle);
     toggle = !toggle;  // use NOT operator to invert toggle value
     count++;
@@ -65,28 +66,29 @@ void setup() {
 
 int posdiff(int a, int b){
   if (a>b){
-    difference =(a-b);
-    return 1;
+    motor_direction=0;
+    return (a-b);
   }
-  difference = (b-a);
-  return 0;  
+  motor_direction=1;
+  return (b-a);  
 }
 
 int timecalc(){
-  return 10000;
+  return 700000;
 }
 
 void posupdate(int msel,int np,int xp,int yp){
   //ADD update code
   int dir=0;
   int mp;
-  Serial.print("Selected motor=");
+  Serial.print("Selected motor = ");
   Serial.println(msel);
   mp = (msel==1)?yp:xp;
-  dir=posdiff(mp,msel);
+  num=posdiff(mp,msel);
   num=difference;
   count=0;
-  Serial.print(num);
+  Serial.print("num = ")
+  Serial.println(num);
 }
 
 void loop() {
@@ -126,19 +128,19 @@ void loop() {
         }    
       }
       else{
-        tx=1;
-        
-        Serial.print("newpos=");
+        Serial.print("newpos = ");
         Serial.println(newpos);
         //add code to update here
+        CurieTimerOne.start(time,&timedBlinkIsr);
         posupdate(msel,newpos,xpos,0);
 
         time=timecalc();
-        CurieTimerOne.start(time,&timedBlinkIsr);
+        
         xpos=newpos;
         newpos=0;
         done=0;
         msel=0;
+        tx=1;
       }
     }
 

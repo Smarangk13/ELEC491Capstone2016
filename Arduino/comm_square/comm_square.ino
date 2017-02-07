@@ -24,7 +24,11 @@ BLEService ledService("19B10000-E8F2-537E-4F6C-D104768A1214"); // BLE LED Servic
 // BLE LED Switch Characteristic - custom 128-bit UUID, read and writable by central
 BLEUnsignedCharCharacteristic switchCharacteristic("19B10001-E8F2-537E-4F6C-D104768A1214", BLERead | BLEWrite);
 
-const int dir = 12; // pin to use for the LED
+//Pin configurations
+const int motor1 = 13;
+const int motor2 = 11;
+const int dir = 12; // pin to use for the direction
+
 
 void timedBlinkIsr()   // callback function when interrupt is asserted
 {
@@ -38,7 +42,9 @@ void timedBlinkIsr()   // callback function when interrupt is asserted
 void setup() {
   Serial.begin(11520);
   // set LED pin to output mode
+  pinMode(motor1, OUTPUT);
   pinMode(dir, OUTPUT);
+  pinMode(motor2, OUTPUT);
 // set advertised local name and service UUID:
   blePeripheral.setLocalName("LED");
   blePeripheral.setAdvertisedServiceUuid(ledService.uuid());
@@ -53,7 +59,6 @@ void setup() {
   // begin advertising BLE service:
   blePeripheral.begin();
   Serial.println("BLE LED Peripheral");
-  digitalWrite(13,LOW);
 }
 
 int posdiff(int a, int b){
@@ -77,10 +82,12 @@ void posupdate(int msel,int np,int xp,int yp){
   Serial.println(msel);
   mp = (msel==1)?yp:xp;
   num=posdiff(mp,np);
-  num=num*2;
+  num=(num*2);
   count=0;
   Serial.print("num = ");
   Serial.println(num);
+  Serial.print("count = ");
+  Serial.println(count);
 }
 
 void loop() {
@@ -127,6 +134,7 @@ void loop() {
         Serial.println(newpos);
         Serial.print("newpos = ");
         Serial.println(newpos);
+        xpos=newpos;
         //add code to update here
         posupdate(msel,newpos,xpos,0);
         
@@ -134,7 +142,6 @@ void loop() {
 
         CurieTimerOne.start(time,&timedBlinkIsr);
         
-        xpos=newpos;
         newpos=0;
         done=0;
         msel=0;

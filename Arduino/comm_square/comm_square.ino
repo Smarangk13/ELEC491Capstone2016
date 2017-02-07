@@ -6,13 +6,22 @@
 #include <CurieBLE.h>
 #include "CurieTimerOne.h"
 
+int stepdegree=1000;                //Steps from the stepper motor per degree
 const int oneSecInUsec = 1000000;   // A second in mirco second unit.
 bool toggle = 0;                    // The LED status toggle
 int time;                           // the variable used to set the Timer
+
+//Number of steps needed(used inn timer)
 int num;
+
+//Number of steps used
 int count=0;
 int xpos=0;
+int ypos=0;
 int newpos;
+
+//Difference variable used by posdiff
+int difference=0;
 
 BLEPeripheral blePeripheral;  // BLE Peripheral Device (the board you're programming)
 BLEService ledService("19B10000-E8F2-537E-4F6C-D104768A1214"); // BLE LED Service
@@ -54,18 +63,38 @@ void setup() {
   Serial.println("BLE LED Peripheral");
 }
 
+int posdiff(int a, int b){
+  if (a>b){
+    difference =(a-b);
+    return 1;
+  }
+  difference = (b-a);
+  return 0;  
+}
+
+int timecalc(){
+  return 10000;
+}
+
 void posupdate(int msel,int np,int xp,int yp){
   //ADD update code
+  int dir=0;
+  int mp;
   Serial.print("Selected motor=");
   Serial.println(msel);
+  mp = (msel==1)?yp:xp;
+  dir=posdiff(mp,msel);
+  num=difference;
+  count=0;
+  Serial.print(num);
 }
 
 void loop() {
-  int temp=0;
-  int msel=0;
-  int tx=1;
-  int dl=1;
   int done=0;
+  int msel=0;
+  int temp=0;
+  int tx=1;
+  int dl=0;
   // listen for BLE peripherals to connect:
   BLECentral central = blePeripheral.central();
 
@@ -86,29 +115,30 @@ void loop() {
           }
           else{
             temp=switchCharacteristic.value();
-            Serial.print("recieved");
-            Serial.println(temp);
             dl++;
             newpos+=temp*tx;
             tx=tx*16;
             if(dl>=3){
               done=1;
-              dl=1;
+              dl=0;
             }
           }
         }    
       }
       else{
         tx=1;
-        msel=0;
+        
         Serial.print("newpos=");
         Serial.println(newpos);
         //add code to update here
         posupdate(msel,newpos,xpos,0);
-        
+
+        time=timecalc();
+        CurieTimerOne.start(time,&timedBlinkIsr);
         xpos=newpos;
         newpos=0;
         done=0;
+        msel=0;
       }
     }
 

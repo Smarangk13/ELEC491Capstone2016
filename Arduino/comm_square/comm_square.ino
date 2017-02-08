@@ -28,12 +28,12 @@ BLEUnsignedCharCharacteristic switchCharacteristic("19B10001-E8F2-537E-4F6C-D104
 const int motor1 = 13;
 const int motor2 = 11;
 const int dir = 12; // pin to use for the direction
-
+int sel;
 
 void timedBlinkIsr()   // callback function when interrupt is asserted
 {
   if (num>count){
-    digitalWrite(13, toggle);
+    digitalWrite(sel, toggle);
     toggle = !toggle;  // use NOT operator to invert toggle value
     count++;
  }
@@ -63,15 +63,15 @@ void setup() {
 
 int posdiff(int a, int b){
   if (a>b){
-    motor_direction=0;
+    digitalWrite(dir,HIGH);
     return (a-b);
   }
-  motor_direction=1;
+  digitalWrite(dir,LOW);
   return (b-a);  
 }
 
 int timecalc(){
-  return 500000;
+  return 500;
 }
 
 void posupdate(int msel,int np,int xp,int yp){
@@ -80,7 +80,8 @@ void posupdate(int msel,int np,int xp,int yp){
   int mp;
   Serial.print("Selected motor = ");
   Serial.println(msel);
-  mp = (msel==1)?yp:xp;
+  mp = (msel==1)?xp:yp;
+  sel = (msel==1)?motor1:motor2;
   num=posdiff(mp,np);
   num=(num*2);
   count=0;
@@ -131,10 +132,9 @@ void loop() {
       }
       else{
         Serial.print("xpos old = ");
-        Serial.println(newpos);
+        Serial.println(xpos);
         Serial.print("newpos = ");
         Serial.println(newpos);
-        xpos=newpos;
         //add code to update here
         posupdate(msel,newpos,xpos,0);
         
@@ -142,13 +142,15 @@ void loop() {
 
         CurieTimerOne.start(time,&timedBlinkIsr);
         
+        xpos=newpos;
         newpos=0;
         done=0;
         msel=0;
         tx=1;
+             
 
         Serial.print("xpos new = ");
-        Serial.println(newpos);
+        Serial.println(xpos);
         
       }
     }

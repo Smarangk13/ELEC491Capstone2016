@@ -30,15 +30,18 @@ const int motor2 = 11;
 const int dir = 12; // pin to use for the direction
 int sel;
 
+
+//ENCODER VARIABLES
+int encoder0PinA = 3;
+ int encoder0PinB = 4;
+ int encoder0PinZ = 6;
+ 
 void timedBlinkIsr()   // callback function when interrupt is asserted
 {
   if (num>count){
-    digitalWrite(13, toggle);
+    digitalWrite(sel, toggle);
     toggle = !toggle;  // use NOT operator to invert toggle value
     count++;
- }
- else if(num==count){
-    digitalWrite(13,LOW);
  }
 }
 
@@ -62,6 +65,11 @@ void setup() {
   // begin advertising BLE service:
   blePeripheral.begin();
   Serial.println("BLE LED Peripheral");
+
+  //Encoder
+   pinMode (encoder0PinA,INPUT);
+   pinMode (encoder0PinB,INPUT);
+   pinMode (encoder0PinZ,INPUT);
 }
 
 int posdiff(int a, int b){
@@ -74,12 +82,12 @@ int posdiff(int a, int b){
 }
 
 int timecalc(){
-  return 500000;
+  return 500;
 }
 
 void posupdate(int msel,int np,int xp,int yp){
   //ADD update code
-  int dir=0;  
+  int dir=0;
   int mp;
   Serial.print("Selected motor = ");
   Serial.println(msel);
@@ -94,7 +102,48 @@ void posupdate(int msel,int np,int xp,int yp){
   Serial.println(count);
 }
 
+int readpos(){
+  int encoder0Pos;
+ int encoder0PinALast = LOW;
+ int PinAval = LOW;
+  int n=0;
+  int z=10;
+   
+   n = digitalRead(encoder0PinA);
+   z=digitalRead(encoder0PinZ);
+   //Serial.println(z);
+   if (z == LOW){
+      encoder0Pos=0;
+      Serial.println("RESET TO 0");
+   }
+   if ((encoder0PinALast == LOW) && (n == HIGH)) {
+     if (digitalRead(encoder0PinB) == LOW) {
+       //if(encoder0Pos<999){
+       encoder0Pos++;
+       //}
+       //else{
+       //encoder0Pos=0;
+       //}
+       
+       
+     }
+     else {
+     //  if(encoder0Pos>0){
+       encoder0Pos--;
+       //}
+      // else{
+       //encoder0Pos=999;
+       //}
+      
+     }
+     Serial.println (encoder0Pos);
+   } 
+   encoder0PinALast = n;
+   return encoder0Pos;
+}
+
 void loop() {
+  int current_position;
   int done=0;
   int msel=0;
   int temp=0;
@@ -103,6 +152,8 @@ void loop() {
   
 // listen for BLE peripherals to connect:
   BLECentral central = blePeripheral.central();
+
+  current_position=readpos();
 
   // if a central is connected to peripheral:
   if (central) {
@@ -134,6 +185,7 @@ void loop() {
         }    
       }
       else{
+        newpos=newpos*3200/3600;
         Serial.print("xpos old = ");
         Serial.println(xpos);
         Serial.print("newpos = ");
@@ -163,5 +215,4 @@ void loop() {
     Serial.println(central.address());
   }
 }
-
 

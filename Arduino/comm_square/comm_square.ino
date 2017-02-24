@@ -74,7 +74,7 @@ int posdiff(int a, int b){
 }
 
 int timecalc(){
-  return 500000;
+  return 500;
 }
 
 void posupdate(int msel,int np,int xp,int yp){

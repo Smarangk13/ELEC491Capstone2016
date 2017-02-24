@@ -41,7 +41,7 @@
         
       }
 
-     angle=encoder0Pos*360/1024;
+     angle=(encoder0Pos*360)/1024;
      Serial.print("encoderpos=  ");
      Serial.println (encoder0Pos);
      Serial.print("angle = ");

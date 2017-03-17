@@ -1,14 +1,8 @@
-/* Read Quadrature Encoder
-  * Connect Encoder to Pins encoder0PinA, encoder0PinB, and +5V.
-  *
-  * Sketch by max wolf / www.meso.net
-  * v. 0.1 - very basic functions - mw 20061220
-  *
-  */  
 
- int encoder0PinA = 3;
- int encoder0PinB = 4;
- int encoder0PinZ = 6;
+
+ int encoder0PinA = 5;
+ int encoder0PinB = 6;
+ int encoder0PinZ = 7;
  int angle;
  int emax=0;
  int encoder0Pos;
@@ -27,7 +21,7 @@
    n = digitalRead(encoder0PinA);
    z=digitalRead(encoder0PinZ);
    //Serial.println(z);
-   if (z == LOW){
+   if (z == HIGH){
       encoder0Pos=0;
       Serial.println("RESET TO 0");
    }

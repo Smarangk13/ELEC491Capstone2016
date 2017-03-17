@@ -14,13 +14,13 @@ int numhigh;
 //Number of steps used
 int xpos=1600;
 int ypos=0;
-int newpos=-20;
+int newpos=0;
 
 //ENCODER VARIABLES
-int encoder0PinA = 3;
+int encoder0PinA = 2;
 bool aval=0;
-int encoder0PinB = 4;
-int encoder0PinZ = 5;
+int encoder0PinB = 3;
+int encoder0PinZ = 4;
 int encoder0pos=70;
 int encodedAngle=0;
 
@@ -36,9 +36,9 @@ BLEService ledService("19B10010-E8F2-537E-4F6C-D104768A1214"); // BLE LED Servic
 BLEUnsignedCharCharacteristic switchCharacteristic("19B10001-E8F2-537E-4F6C-D104768A1214", BLERead | BLEWrite);
 
 //Pin configurations
-const int motor1 = 13;
-const int motor2 = 11;
-const int dir = 12; // pin to use for the direction
+const int motor1 = 10;
+const int motor2 = 12;
+const int dir = 11; // pin to use for the direction
 bool motor_dir=1;
 int sel=13;
 

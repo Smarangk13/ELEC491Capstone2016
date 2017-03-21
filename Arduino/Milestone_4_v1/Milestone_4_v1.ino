@@ -45,9 +45,9 @@ int newpos = 20;
 
 //ENCODER VARIABLES
 bool aval = 0;
-int encoder0PinA  =  2;
-int encoder0PinB  =  3;
-int encoder0PinZ  =  4;
+int encoder0PinZ  =  2;
+int encoder0PinA  =  3;
+int encoder0PinB  =  4;
 int encoder0pos = 70;
 int offset0 = 0;
 
@@ -81,7 +81,7 @@ BLEService ledService("19B10010-E8F2-537E-4F6C-D104768A1214"); // BLE LED Servic
 
 // BLE LED Switch Characteristic - custom 128-bit UUID, read and writable by central
 BLEUnsignedCharCharacteristic switchCharacteristic("19B10001-E8F2-537E-4F6C-D104768A1214", BLERead | BLEWrite);
-BLECharCharacteristic sendCharacteristic("19B10012-E8F2-537E-4F6C-D104768A1214", BLERead | BLENotify); // allows remote device to get notifications
+//BLECharCharacteristic sendCharacteristic("19B10012-E8F2-537E-4F6C-D104768A1214", BLERead | BLENotify); // allows remote device to get notifications
 
 void setup() {
   Serial.begin(11520);
@@ -117,11 +117,11 @@ void setup() {
 
  // add service and characteristic:
   blePeripheral.addAttribute(ledService);
-  blePeripheral.addAttribute(sendCharacteristic);
+  //blePeripheral.addAttribute(sendCharacteristic);
   blePeripheral.addAttribute(switchCharacteristic);
   // set the initial value for the characeristic:
   switchCharacteristic.setValue(0);
-  sendCharacteristic.setValue(0);
+  //sendCharacteristic.setValue(0);
 
   // begin advertising BLE service:
   blePeripheral.begin();
@@ -187,16 +187,18 @@ void absolute_Position_Read(){
 }
 
 void loop() {
-  int done = 0;
+  int recieved_new_pos = 0;
   int recieved_byte1 = 0;
   /*
     IF Recieved byte 1
+    0- Do nothing
     1- Motor 1
     2- Motor 2
     3- Motor 3 (NOT IMPLEMENTED)
     11- Motor 1 continous step forward
     12- Motor 1 Continous step reverse
-    13- Motor 1 stop
+    13
+    19- Motor 1 stop
     21- Motor 2 continous step forward
     22- Motor 2 continous step reverse
     23- Motor 2 stop
@@ -219,33 +221,37 @@ void loop() {
       irread();
       //time = timecalc();  
       //CurieTimerOne.start(time,&timedBlinkIsr);
-        
-      if (done == 0) {
+
+      //Read incoming data  
+      if (recieved_new_pos == 0) {
+        //if data is being written
         if(switchCharacteristic.written()){
-          if(recieved_byte1 == 0){
+          //See incoming data and decide what to do
+          //Refer recieved_byte1
+          if((recieved_byte1 == 0)or ((recieved_byte1 > 5))){
             recieved_byte1 = switchCharacteristic.value();
           }
 
-          /*
-          else if(recieved_byte1 > 10){
-            recieved_byte1 = switchCharacteristic.value();
-          }
-          */
-          
-          else{
+          //If motor 1 or 2 has been selected Reconstruct bytes as position information
+          else if(recieved_byte1 < 5){
             temp = switchCharacteristic.value();
             data_length++;
             newpos+= temp*tx;
             tx = tx*128;
             if(data_length >= 2){
-              done = 1;
+              recieved_new_pos = 1;
               data_length = 0;
-              sendCharacteristic.setValue(1);
+              //sendCharacteristic.setValue(1);
             }
           }
         }
-        /*
-        switch(recieved_byte){
+
+        //if no data is written
+        else{
+          if(recieved_byte1>70){
+          Serial.println(recieved_byte1);
+          }
+        switch(recieved_byte1){
           case 11:
             toggle!=toggle;
             motorstep(motor0,dir0,0);
@@ -256,6 +262,10 @@ void loop() {
             motorstep(motor0,dir0,1);
             break;
 
+          case 19:
+            recieved_byte1=0;
+            break;
+            
           case 21:
             toggle!=toggle;
             motorstep(motor1,dir1,0);
@@ -291,10 +301,14 @@ void loop() {
             }
             
           default:
-            recieved_byte1 = 0;
-        }*/
+            bool a=0;
+            //Serial.print("/nDEFAULT");
+            //recieved_byte1 = 0;
+          }
+        }
       }
-      
+
+      //Recieved new position data- move to selected position
       else{
         num = newpos*3200/3600;
         if(recieved_byte1 == 1){
@@ -313,18 +327,23 @@ void loop() {
         //CurieTimerOne.rdRstTickCount()
         
         newpos = 0;
-        done = 0;
+        recieved_new_pos = 0;
         recieved_byte1 = 0;
         tx = 1;
       
       }
       
       if(movecount == 0){
-        sendCharacteristic.setValue(2);
+        //sendCharacteristic.setValue(2);
         movecount=1;
       }
+      else if(movecount%100 == 0){
+//        time = timecalc();  
+//        CurieTimerOne.rdRstTickCount();
+//        CurieTimerOne.start(time,&timedBlinkIsr);
+      }
       else if(movecount>1000000){
-        sendCharacteristic.setValue(10);
+        //sendCharacteristic.setValue(10);
       }
     }
 

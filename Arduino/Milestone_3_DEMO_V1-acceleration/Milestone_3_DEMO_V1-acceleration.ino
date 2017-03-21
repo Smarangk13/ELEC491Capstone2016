@@ -14,6 +14,7 @@ int count=0;
 int xpos=1600;
 int ypos=0;
 int newpos;
+unsigned int movecount=0;
 
 //Difference variable used by posdiff
 int motor_direction=0;
@@ -25,7 +26,11 @@ int encoder0PinB = 4;
 int encoder0PinZ = 5;
 int encoder0pos=70;
 
-
+   int tmin = 300;
+  int tmax = 1000;
+  int tmid=0;
+  int timeval=0;
+int tim=0;
 BLEPeripheral blePeripheral;  // BLE Peripheral Device (the board you're programming)
 BLEService ledService("19B10010-E8F2-537E-4F6C-D104768A1214"); // BLE LED Service
 
@@ -45,9 +50,11 @@ void timedBlinkIsr()   // callback function when interrupt is asserted
     //digitalWrite(8, toggle);
     toggle = !toggle;  // use NOT operator to invert toggle value
     count++;
+    movecount++;
  }
  else if(num==count){
     digitalWrite(sel,LOW);
+    movecount=0;
  }
 }
 
@@ -79,6 +86,9 @@ void setup() {
   // begin advertising BLE service:
   blePeripheral.begin();
   Serial.println("BLE LED Peripheral");
+
+  tmid=(tmax-tmin)/2;
+  timeval=tmax;
 }
 
 int posdiff(int a, int b){
@@ -91,7 +101,23 @@ int posdiff(int a, int b){
 }
 
 int timecalc(){
-  return 500;
+  Serial.print("num = ");
+  Serial.println(num);
+  Serial.print("count");
+  Serial.println(count);
+        
+  if((num-count)<900){
+    Serial.print("in if: ");
+    timeval+=80;
+  }
+  else{
+    Serial.print("in else: ");
+    timeval-=10;
+  }
+  Serial.println(timeval);
+  timeval = constrain(timeval,tmin,tmax);
+  return timeval;
+  //return 500;
 }
 
 void posupdate(int msel,int np,int xp,int yp){
@@ -156,9 +182,9 @@ void loop() {
         //add code to update here
         posupdate(msel,newpos,xpos,0);
         
-        time=timecalc();  
+        tim=timecalc();  
 
-        CurieTimerOne.start(time,&timedBlinkIsr);
+        CurieTimerOne.start(tim,&timedBlinkIsr);
         
         xpos=newpos;//encoder0pos*3200/1024;
         newpos=0;
@@ -170,6 +196,16 @@ void loop() {
         Serial.print("xpos new = ");
         Serial.println(xpos);
         Serial.println("  ");
+      }
+      if (movecount%20==1){
+        tim = timecalc(); 
+        Serial.print("Changing time to ");
+        Serial.println(tim); 
+        CurieTimerOne.rdRstTickCount();
+        CurieTimerOne.start(tim,&timedBlinkIsr);
+      }
+      else if (movecount==0){
+        timeval=tmax;
       }
     }
 

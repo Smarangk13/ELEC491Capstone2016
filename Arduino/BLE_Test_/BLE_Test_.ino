@@ -72,6 +72,8 @@ void loop() {
     // update get, either central has written to characteristic or button state has changed
     if (getCharacteristic.value()) {
       Serial.println("get on");
+      int x=getCharacteristic.value();
+      Serial.println(x);
       digitalWrite(getPin, HIGH);
     } else {
       Serial.println("get off");

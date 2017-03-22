@@ -17,10 +17,10 @@ int ypos=0;
 int newpos=0;
 
 //ENCODER VARIABLES
-int encoder0PinA = 2;
+int encoder0PinA = 6;
 bool aval=0;
-int encoder0PinB = 3;
-int encoder0PinZ = 4;
+int encoder0PinB = 7;
+int encoder0PinZ = 5;
 int encoder0pos=70;
 int encodedAngle=0;
 

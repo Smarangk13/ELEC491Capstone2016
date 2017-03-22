@@ -26,8 +26,8 @@ int encoder0PinB = 4;
 int encoder0PinZ = 5;
 int encoder0pos=70;
 
-   int tmin = 300;
-  int tmax = 1000;
+int tmin = 78;
+int tmax = 1500;
   int tmid=0;
   int timeval=0;
 int tim=0;
@@ -63,6 +63,7 @@ void setup() {
   // set LED pin to output mode
   pinMode(motor1, OUTPUT);
   pinMode(dir, OUTPUT);
+  pinMode(11, OUTPUT);
   pinMode(motor2, OUTPUT);
 
   pinMode (encoder0PinA,INPUT);
@@ -94,9 +95,11 @@ void setup() {
 int posdiff(int a, int b){
   if (a>b){
     digitalWrite(dir,HIGH);
+    digitalWrite(11,HIGH);
     return (a-b);
   }
   digitalWrite(dir,LOW);
+  digitalWrite(11,LOW);
   return (b-a);  
 }
 
@@ -106,13 +109,13 @@ int timecalc(){
   Serial.print("count");
   Serial.println(count);
         
-  if((num-count)<900){
+  if((num-count)<1200){
     Serial.print("in if: ");
-    timeval+=80;
+    timeval+=20;
   }
   else{
     Serial.print("in else: ");
-    timeval-=10;
+    timeval-=20;
   }
   Serial.println(timeval);
   timeval = constrain(timeval,tmin,tmax);
@@ -174,7 +177,7 @@ void loop() {
       }
       else{
         newpos=newpos*3200/3600;
-        //newpos=newpos*8;
+        newpos=newpos*8;
         Serial.print("xpos old = ");
         Serial.println(xpos);
         Serial.print("newpos = ");
@@ -197,7 +200,7 @@ void loop() {
         Serial.println(xpos);
         Serial.println("  ");
       }
-      if (movecount%20==1){
+      if (movecount%2==1){
         tim = timecalc(); 
         Serial.print("Changing time to ");
         Serial.println(tim); 

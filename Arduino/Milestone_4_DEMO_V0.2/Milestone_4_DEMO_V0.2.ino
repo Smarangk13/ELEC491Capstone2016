@@ -82,7 +82,7 @@ BLEService ledService("19B10010-E8F2-537E-4F6C-D104768A1214"); // BLE LED Servic
 
 // BLE LED Switch Characteristic - custom 128-bit UUID, read and writable by central
 BLEUnsignedCharCharacteristic switchCharacteristic("19B10001-E8F2-537E-4F6C-D104768A1214", BLERead | BLEWrite);
-
+BLECharCharacteristic sendCharacteristic("19B10012-E8F2-537E-4F6C-D104768A1214", BLERead | BLENotify);
 void setup() {
   Serial.begin(11520);
   
@@ -114,13 +114,15 @@ void setup() {
   // set advertised local name and service UUID:
   blePeripheral.setLocalName("LED");
   blePeripheral.setAdvertisedServiceUuid(ledService.uuid());
-
+  blePeripheral.addAttribute(sendCharacteristic);
+  
  // add service and characteristic:
   blePeripheral.addAttribute(ledService);
   blePeripheral.addAttribute(switchCharacteristic);
+  
   // set the initial value for the characeristic:
   switchCharacteristic.setValue(0);
-
+  sendCharacteristic.setValue(0);
 
   // begin advertising BLE service:
   blePeripheral.begin();
@@ -244,7 +246,7 @@ void loop() {
         }
 
         debugprints();
-
+        sendCharacteristic.setValue(1);
         time=timecalc();  
         CurieTimerOne.start(time,&timedBlinkIsr);
         
@@ -253,6 +255,10 @@ void loop() {
         recieved_byte1 = 0;
         tx = 1;
              
+      }
+      if(movecount==0){
+        sendCharacteristic.setValue(2);
+         movecount=1;
       }
       if(movecount%400==1){
         Serial.print("encoder0 = ");

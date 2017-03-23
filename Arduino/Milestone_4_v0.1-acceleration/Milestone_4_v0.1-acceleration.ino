@@ -21,23 +21,21 @@ const int motor1  =  10;
 const int dir1  =  11; 
 
 //Gear ratios
-float pan_Gearratio = 1;
-float tilt_Gearratio = 1;
+float pan_Gearratio = 5;
+float tilt_Gearratio = 8;
 
 //Timer variables
 const int oneSecInUsec  =  1000000;   // A second in mirco second unit.
 bool toggle  =  0;                    // The LED status toggle
 int time;                           // the variable used to set the Timer
-int tmin = 1000;
-int tmax = 100;
 
 //Number of steps needed(used in timer)
 unsigned int num;
-int desired_Pan_Value = 1000;
+int desired_Pan_Value = 800;
 int Pan_high = 800;
 int desired_Tilt_Value = 800;
 int Tilt_high = 800;
-int tolerance = 40;
+int tolerance = 90;
 
 //Positions
 int current_xPos;
@@ -75,6 +73,15 @@ int l2 = 7;
 unsigned int movecount = 20;
 int timeval = 1000;
 unsigned int tdelay = 0;
+int tmin = 178;
+int tmax = 1900;
+bool accelerate = 0;
+bool pacc = 0;
+bool tacc = 0;
+int pmid = 0;
+int tmid = 0;
+bool pmove = 0;
+bool tmove = 0;
 
 //Bluetooth Setup
 BLEPeripheral blePeripheral;  // BLE Peripheral Device (the board you're programming)
@@ -156,7 +163,31 @@ void timedBlinkIsr()   // callback function when interrupt is asserted
 
 
 int timecalc(){
-  return 600;
+  //XOR decelerate when we are starting at a lower position than the mid and ew then pass but if we start at ahigher position pacc is 1 
+  if(pmove==1){
+    if((encoder0pos<pmid)== pacc){
+      //Serial.print("in if: ");
+      timeval-=35;
+    }
+    else{
+      //Serial.print("in else: ");
+      timeval+=35;
+    }
+  }
+  if(tmove==1){
+    if((encoder1pos<tmid)== tacc){
+      //Serial.print("in if: ");
+      timeval-=35;
+    }
+    else{
+      //Serial.print("in else: ");
+      timeval+=35;
+    }
+  }
+  timeval = constrain(timeval,tmin,tmax);
+
+  return timeval;
+  //return 500;
 }
 
 void absolute_Position_Read(){
@@ -237,28 +268,62 @@ void loop() {
         if(recieved_byte1 == 1){
           desired_Pan_Value = num*pan_Gearratio;
           Pan_high = desired_Pan_Value+tolerance;
+          pmove = 1;
         }
         else if(recieved_byte1 == 2){
           desired_Tilt_Value = num*tilt_Gearratio;
           Tilt_high = desired_Tilt_Value+tolerance;
+          tmove = 1;
         }
 
         debugprints();
 
-        time=timecalc();  
+        time=tmax;  
         CurieTimerOne.start(time,&timedBlinkIsr);
         
         newpos = 0;
         recieved_new_pos = 0;
         recieved_byte1 = 0;
         tx = 1;
+        movecount=1;
              
       }
-      if(movecount%400==1){
-        Serial.print("encoder0 = ");
-        Serial.println(encoder0pos);
-        Serial.print("encoder1 = ");
-        Serial.println(encoder1pos);
+      if(movecount==0){
+        movecount=2;
+        pmove=0;
+        tmove=0;
+        //send a done to ipad
+      }
+      else if(movecount==1){
+          //Serial.println("reset to 0");
+          pacc = (encoder0pos>desired_Pan_Value)?0:1;
+          tacc = (encoder1pos>desired_Tilt_Value)?0:1;
+          tmid = (encoder1pos+desired_Tilt_Value)/2;
+          pmid = (encoder0pos+desired_Pan_Value)/2;
+
+          Serial.print("pmid = ");
+          Serial.println(pmid);
+          Serial.print("pacc = ");
+          Serial.println(pacc);
+          Serial.println("  ");
+          
+          time=tmax;
+          timeval=tmax;
+          CurieTimerOne.rdRstTickCount();
+          CurieTimerOne.start(time,&timedBlinkIsr);
+          movecount=2;
+      }
+      else if(movecount%40==3){
+        time = timecalc(); 
+        //Serial.print("Changing time to ");
+        //Serial.println(time); 
+        CurieTimerOne.rdRstTickCount();
+        CurieTimerOne.start(time,&timedBlinkIsr);
+      }
+      if(movecount%100==3){
+        Serial.print("Changing time to ");
+        Serial.println(time); 
+        debugprints1();
       }
     }
 
@@ -275,11 +340,17 @@ void debugprints(){
   Serial.println(encoder1pos);
   Serial.print("pan = ");
   Serial.println(desired_Pan_Value);
-  Serial.print("pan high = ");
-  Serial.println(Pan_high);
   Serial.print("tilt = ");
   Serial.println(desired_Tilt_Value);
   
+  Serial.println("  ");
+}
+
+void debugprints1(){
+  Serial.print("encoder0 = ");
+  Serial.println(encoder0pos);
+  Serial.print("encoder1 = ");
+  Serial.println(encoder1pos);
   Serial.println("  ");
 }
 
@@ -350,3 +421,4 @@ void read_absolute_pos(){
   current_xPos = panread+potentiometer0offset;
   current_xPos = panread+potentiometer1offset;
 }
+

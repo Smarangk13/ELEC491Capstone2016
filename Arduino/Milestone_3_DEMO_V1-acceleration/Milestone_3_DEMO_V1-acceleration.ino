@@ -1,3 +1,4 @@
+//2 motors-0 encoders no direction
 #include <CurieBLE.h>
 #include "CurieTimerOne.h"
 
@@ -104,11 +105,6 @@ int posdiff(int a, int b){
 }
 
 int timecalc(){
-  Serial.print("num = ");
-  Serial.println(num);
-  Serial.print("count");
-  Serial.println(count);
-        
   if((num-count)<1200){
     Serial.print("in if: ");
     timeval+=20;

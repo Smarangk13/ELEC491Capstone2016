@@ -21,7 +21,7 @@ const int motor1  =  10;
 const int dir1  =  11; 
 
 //Gear ratios
-float pan_Gearratio = 5;
+float pan_Gearratio = 8;
 float tilt_Gearratio = 8;
 
 //Timer variables
@@ -75,7 +75,7 @@ int timeval = 1000;
 unsigned int tdelay = 0;
 int tmin = 178;
 int tmax = 1900;
-bool accelerate = 0;
+bool start_movement = 0;
 bool pacc = 0;
 bool tacc = 0;
 int pmid = 0;
@@ -278,9 +278,10 @@ void loop() {
 
         debugprints();
 
-        time=tmax;  
-        CurieTimerOne.start(time,&timedBlinkIsr);
-        
+        //time=tmax;  
+        //CurieTimerOne.start(time,&timedBlinkIsr);
+
+        start_movement = 1;
         newpos = 0;
         recieved_new_pos = 0;
         recieved_byte1 = 0;
@@ -288,13 +289,8 @@ void loop() {
         movecount=1;
              
       }
-      if(movecount==0){
-        movecount=2;
-        pmove=0;
-        tmove=0;
-        //send a done to ipad
-      }
-      else if(movecount==1){
+      
+      if(start_movement==1){
           //Serial.println("reset to 0");
           pacc = (encoder0pos>desired_Pan_Value)?0:1;
           tacc = (encoder1pos>desired_Tilt_Value)?0:1;
@@ -311,7 +307,14 @@ void loop() {
           timeval=tmax;
           CurieTimerOne.rdRstTickCount();
           CurieTimerOne.start(time,&timedBlinkIsr);
-          movecount=2;
+          start_movement=0;
+      }
+      if(movecount==0){
+        movecount = 1;
+        debugprints();
+        pmove = 0;
+        tmove = 0;
+        //send a done to ipad
       }
       else if(movecount%40==3){
         time = timecalc(); 
@@ -421,4 +424,3 @@ void read_absolute_pos(){
   current_xPos = panread+potentiometer0offset;
   current_xPos = panread+potentiometer1offset;
 }
-

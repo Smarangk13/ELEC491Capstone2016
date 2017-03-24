@@ -31,11 +31,11 @@ int time;                           // the variable used to set the Timer
 
 //Number of steps needed(used in timer)
 unsigned int num;
-int desired_Pan_Value = 800;
-int Pan_high = 800;
-int desired_Tilt_Value = 800;
-int Tilt_high = 800;
-int tolerance = 90;
+int desired_Pan_Value = 1800;
+int Pan_high = 1800;
+int desired_Tilt_Value = 1800;
+int Tilt_high = 1800;
+int tolerance = 40;
 
 //Positions
 int current_xPos;
@@ -247,6 +247,9 @@ void loop() {
           if(recieved_byte1==0){
             recieved_byte1=switchCharacteristic.value();
           }
+          else if(recieved_byte1>10){
+            recieved_byte1=switchCharacteristic.value();
+          }
           else{
             temp=switchCharacteristic.value();
             data_length++;
@@ -257,7 +260,24 @@ void loop() {
               data_length=0;
             }
           }
-        }    
+        }
+        if(recieved_byte1==11){
+              desired_Pan_Value = encoder0pos + 40;
+              Pan_high = desired_Pan_Value+tolerance;
+              time=500;
+              CurieTimerOne.rdRstTickCount();
+              CurieTimerOne.start(time,&timedBlinkIsr);
+        }
+        else if(recieved_byte1==12){
+              Pan_high = encoder0pos - 40;
+              desired_Pan_Value = Pan_high-tolerance;
+              time=500;
+              CurieTimerOne.rdRstTickCount();
+              CurieTimerOne.start(time,&timedBlinkIsr);
+        }
+        else if(recieved_byte1==19){
+         recieved_byte1=0;    
+        }
       }
       else{
         num=newpos*1024/3600;

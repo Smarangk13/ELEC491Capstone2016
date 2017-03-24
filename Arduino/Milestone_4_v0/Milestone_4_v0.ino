@@ -97,14 +97,14 @@ void setup() {
   pinMode (encoder0PinB,INPUT);//PULLUP??
   attachInterrupt(digitalPinToInterrupt(encoder0PinB),bhigh0,RISING);
   pinMode (encoder0PinZ,INPUT);
-  attachInterrupt(digitalPinToInterrupt(encoder0PinZ),zero0,LOW);
+  attachInterrupt(digitalPinToInterrupt(encoder0PinZ),zero0,RISING);
 
   //ENCODER1
   pinMode (encoder1PinA,INPUT);
   pinMode (encoder1PinB,INPUT);
   attachInterrupt(digitalPinToInterrupt(encoder1PinB),bhigh1,RISING);
   pinMode (encoder1PinZ,INPUT);
-  attachInterrupt(digitalPinToInterrupt(encoder1PinZ),zero1,HIGH);
+  attachInterrupt(digitalPinToInterrupt(encoder1PinZ),zero1,RISING);
 
   //Analog in-Potentiometer + ir sensor
   pinMode(A0,INPUT);

@@ -150,10 +150,10 @@ void timedBlinkIsr()   // callback function when interrupt is asserted
   }
  
   if (desired_Tilt_Value>encoder1pos){
-    motorstep(motor1,dir1,1);
+    motorstep(motor1,dir1,0);
   }
   else if(Tilt_high<encoder1pos){
-    motorstep(motor1,dir1,0);
+    motorstep(motor1,dir1,1);
   }
    
   else if((desired_Pan_Value<encoder0pos)and (Pan_high>encoder0pos)){
@@ -276,6 +276,23 @@ void loop() {
               CurieTimerOne.start(time,&timedBlinkIsr);
         }
         else if(recieved_byte1==19){
+         recieved_byte1=0;    
+        }
+        else if(recieved_byte1==21){
+              desired_Tilt_Value = encoder1pos + 40;
+              Tilt_high = desired_Tilt_Value+tolerance;
+              time=500;
+              CurieTimerOne.rdRstTickCount();
+              CurieTimerOne.start(time,&timedBlinkIsr);
+        }
+        else if(recieved_byte1==22){
+              Tilt_high = encoder1pos - 40;
+              desired_Tilt_Value = Tilt_high-tolerance;
+              time=500;
+              CurieTimerOne.rdRstTickCount();
+              CurieTimerOne.start(time,&timedBlinkIsr);
+        }
+        else if(recieved_byte1==29){
          recieved_byte1=0;    
         }
       }
@@ -407,10 +424,10 @@ void bhigh1(){
  aval = digitalRead(encoder1PinA);
   //if(bval == HIGH){
   if(aval == HIGH){
-    encoder1pos++;
+    encoder1pos--;
   }
   else{
-    encoder1pos--;
+    encoder1pos++;
   }
   //}
 }

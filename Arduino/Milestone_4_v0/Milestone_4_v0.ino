@@ -35,8 +35,8 @@ int tmax = 100;
 unsigned int num;
 int desired_Pan_Value = 1000;
 int Pan_high = 800;
-int desired_Tilt_Value = 800;
-int Tilt_high = 800;
+int desired_Tilt_Value = 200;
+int Tilt_high = 200;
 int tolerance = 40;
 
 //Positions
@@ -55,7 +55,7 @@ int offset0 = 0;
 int encoder1PinZ  =  5;
 int encoder1PinA  =  6;
 int encoder1PinB  =  7;
-int encoder1pos = 800;
+int encoder1pos = 200;
 int offset1 = 0;
 
 //Potentiometers
@@ -143,10 +143,10 @@ void timedBlinkIsr()   // callback function when interrupt is asserted
   }
  
   if (desired_Tilt_Value>encoder1pos){
-    motorstep(motor1,dir1,1);
+    motorstep(motor1,dir1,0);
   }
   else if(Tilt_high<encoder1pos){
-    motorstep(motor1,dir1,0);
+    motorstep(motor1,dir1,1);
   }
    
   else if((desired_Pan_Value<encoder0pos)and (Pan_high>encoder0pos)){
@@ -312,10 +312,11 @@ void bhigh1(){
  aval = digitalRead(encoder1PinA);
   //if(bval == HIGH){
   if(aval == HIGH){
-    encoder1pos++;
+    encoder1pos--;
   }
   else{
-    encoder1pos--;
+    encoder1pos++;
+    
   }
   //}
 }

@@ -33,8 +33,8 @@ int time;                           // the variable used to set the Timer
 unsigned int num;
 int desired_Pan_Value = 4096;
 int Pan_high = 4096;
-int desired_Tilt_Value = 1800;
-int Tilt_high = 1800;
+int desired_Tilt_Value = 2360;
+int Tilt_high = 2360;
 int tolerance = 40;
 
 //Positions
@@ -48,13 +48,13 @@ int encoder0PinZ  =  2;
 int encoder0PinA  =  3;
 int encoder0PinB  =  4;
 int encoder0pos = 4096;
-int offset0 = 0;
+int offset0 = 44;
 
 int encoder1PinZ  =  5;
 int encoder1PinA  =  6;
 int encoder1PinB  =  7;
-int encoder1pos = 1800;
-int offset1 = 0;
+int encoder1pos = 2360;
+int offset1 = 14;
 
 //Potentiometers
 int potentiometer0 = 0;
@@ -71,10 +71,11 @@ int l2 = 7;
 
 //Movement counter
 unsigned int movecount = 20;
+unsigned int movecount2 = 20;
 int timeval = 1000;
 unsigned int tdelay = 0;
-int tmin = 108;
-int tmax = 1000;
+int tmin = 118;
+int tmax = 1600;
 bool start_movement = 0;
 bool pacc = 0;
 bool tacc = 0;
@@ -135,6 +136,7 @@ void setup() {
 
 void motorstep(int motor_select,int dir_select,bool dir){
   movecount++;
+  movecount2++;
   digitalWrite(dir_select,dir);
   digitalWrite(motor_select,toggle);
 }
@@ -158,31 +160,32 @@ void timedBlinkIsr()   // callback function when interrupt is asserted
    
   else if((desired_Pan_Value<encoder0pos)and (Pan_high>encoder0pos)){
     movecount = 0;
+    movecount2 = 0;
   }
 }
 
 
 int timecalc(){
-  //WHY NOT USE CASE TO SPECIFICALLY POINT TO A CERTAIN VALUE:://
   //XOR decelerate when we are starting at a lower position than the mid and ew then pass but if we start at ahigher position pacc is 1 
+  int x = timeval/100;
   if(pmove==1){
     if((encoder0pos<pmid)== pacc){
       //Serial.print("in if: ");
-      timeval-=20;
+      timeval-=x;
     }
     else{
       //Serial.print("in else: ");
-      timeval+=20;
+      timeval+=x;
     }
   }
   if(tmove==1){
     if((encoder1pos<tmid)== tacc){
       //Serial.print("in if: ");
-      timeval-=20;
+      timeval-=x;
     }
     else{
       //Serial.print("in else: ");
-      timeval+=20;
+      timeval+=x;
     }
   }
   timeval = constrain(timeval,tmin,tmax);
@@ -295,6 +298,9 @@ void loop() {
         else if(recieved_byte1==29){
          recieved_byte1=0;    
         }
+        else if(recieved_byte1==99){
+         recieved_byte1=0;    
+        }
       }
       else{
         num=newpos*1024/3600;
@@ -305,11 +311,13 @@ void loop() {
         Serial.println(num);
         if(recieved_byte1 == 1){
           desired_Pan_Value = num*pan_Gearratio;
+          desired_Pan_Value += offset0*pan_Gearratio;
           Pan_high = desired_Pan_Value+tolerance;
           pmove = 1;
         }
         else if(recieved_byte1 == 2){
           desired_Tilt_Value = num*tilt_Gearratio;
+          desired_Tilt_Value += offset1*tilt_Gearratio;
           Tilt_high = desired_Tilt_Value+tolerance;
           tmove = 1;
         }
@@ -354,17 +362,13 @@ void loop() {
         tmove = 0;
         //send a done to ipad
       }
-      else if(movecount%40==3){
+      else if(movecount2>40){
+        movecount2=0;
         time = timecalc(); 
         //Serial.print("Changing time to ");
         //Serial.println(time); 
         CurieTimerOne.rdRstTickCount();
         CurieTimerOne.start(time,&timedBlinkIsr);
-      }
-      if(movecount%100==3){
-        Serial.print("Changing time to ");
-        Serial.println(time); 
-        debugprints1();
       }
     }
 

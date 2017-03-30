@@ -32,8 +32,8 @@ void setup() {
   blePeripheral.addAttribute(getCharacteristic);
   blePeripheral.addAttribute(sendCharacteristic);
 
-  getCharacteristic.setValue(0);
-  sendCharacteristic.setValue(0);
+  //getCharacteristic.setValue(0);
+ // sendCharacteristic.setValue(0);
 
   // advertise the service
   blePeripheral.begin();
@@ -43,21 +43,24 @@ void setup() {
 
 void loop() {
   // poll peripheral
+  int a=0;
   blePeripheral.poll();
 
   // read the current button pin state
-  char sendValue = digitalRead(4);
+  //char sendValue = digitalRead(4);
 
   // has the value changed since the last read
-  boolean sendChanged = (sendCharacteristic.value() != sendValue);
+  //boolean sendChanged = (sendCharacteristic.value() != sendValue);
      int incomingByte = 0;
         // send data only when you receive data:
         if (Serial.available() > 0) {
                 // read the incoming byte:
                 incomingByte = Serial.parseInt();
             Serial.println(incomingByte);
-            //getCharacteristic.setValue(incomingByte);
+          //  getCharacteristic.setValue(incomingByte);
             sendCharacteristic.setValue(incomingByte);
+            a=sendCharacteristic.value();
+            Serial.print(a);
         }
 
 

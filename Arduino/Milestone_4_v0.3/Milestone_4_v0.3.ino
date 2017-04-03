@@ -31,10 +31,10 @@ int time;                           // the variable used to set the Timer
 
 //Number of steps needed(used in timer)
 unsigned int num;
-int desired_Pan_Value = 4096;
-int Pan_high = 4096;
-int desired_Tilt_Value = 2360;
-int Tilt_high = 2360;
+int desired_Pan_Value = 4448;
+int Pan_high = 4548;
+int desired_Tilt_Value = 2888;
+int Tilt_high = 2988;
 int tolerance = 40;
 
 //Positions
@@ -47,13 +47,13 @@ bool aval = 0;
 int encoder0PinZ  =  2;
 int encoder0PinA  =  3;
 int encoder0PinB  =  4;
-int encoder0pos = 4096;
+int encoder0pos = 4448;
 int offset0 = 44;
 
 int encoder1PinZ  =  5;
 int encoder1PinA  =  6;
 int encoder1PinB  =  7;
-int encoder1pos = 2360;
+int encoder1pos = 2888;
 int offset1 = 14;
 
 //Potentiometers
@@ -132,6 +132,8 @@ void setup() {
 
   // begin advertising BLE service:
   blePeripheral.begin();
+
+  //read_absolute_pos();
 }
 
 void motorstep(int motor_select,int dir_select,bool dir){
@@ -194,18 +196,6 @@ int timecalc(){
   //return 500;
 }
 
-void absolute_Position_Read(){
-  //read angle from potentiometers then write to encoder pos
-  //read_absolute_pos();
-  current_xPos = 150;//in degrees
-  current_yPos = 150;//in degrees
-
-  //Convert to encoder data
-  encoder0pos = current_xPos * 1024/360;
-  encoder0pos*=  pan_Gearratio;
-  encoder1pos  =  current_yPos * 1024/360;
-  encoder1pos*= tilt_Gearratio;
-}
 
 void loop() {
   int recieved_new_pos = 0;
@@ -455,14 +445,14 @@ void irread(){
 
 void read_absolute_pos(){
   int panread = analogRead(potentiometer0);
-  int tiltread = analogRead(potentiometer1);  
+  //int tiltread = analogRead(potentiometer1);  
 
-  panread = constrain(panread - readoffset0,0,1024);
-  tiltread = constrain(tiltread - readoffset1,0,1024);
+  panread = constrain(panread ,0,1024);
+  //tiltread = constrain(tiltread - readoffset1,0,1024);
 
-  panread = panread*10*3600/1024;
-  tiltread = tiltread*10*3600/1024;
+  panread = panread*10;
+  //tiltread = tiltread*10*3600/1024;
   
-  current_xPos = panread+potentiometer0offset;
-  current_xPos = panread+potentiometer1offset;
+  encoder0pos = panread+potentiometer0offset;
+  //current_xPos = panread+potentiometer1offset;
 }

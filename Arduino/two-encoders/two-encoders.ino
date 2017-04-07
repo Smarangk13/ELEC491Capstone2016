@@ -6,7 +6,7 @@ bool aval=0;
   int encoder1PinA = 6;
  int encoder1PinB = 7;
  int encoder1PinZ = 5;
- int pos0=0,pos1=0;
+ int pos0=4888,pos1=2888;
  int pos0last=0,pos1last=0;
 
  void setup() { 
@@ -51,7 +51,12 @@ void bhigh1(){
 }
 
 void zero1(){
-  pos1=0;
+  if(pos1%1024>500){
+    pos1=1024*(pos1/1024+1);
+  }
+  else{
+    pos1=1024*(pos1/1024);
+  }
 }
 
 void bhigh(){
@@ -68,6 +73,11 @@ void bhigh(){
 }
 
 void zero(){
-  pos0=0;
+  if(pos0%1024>500){
+   pos0=1024*(pos0/1024+1);
+  }
+  else{
+    pos0=1024*(pos0/1024);
+  }
 }
  

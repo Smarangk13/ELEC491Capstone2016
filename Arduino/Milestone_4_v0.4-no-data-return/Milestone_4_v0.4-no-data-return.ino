@@ -19,6 +19,8 @@ const int motor0  =  8;              //Movement pin
 const int dir0  = 9;                 //Direction pin
 const int motor1  =  10;
 const int dir1  =  11; 
+const int centre_x  =  4300; 
+const int centre_y  =  2878; 
 
 //Gear ratios
 float pan_Gearratio = 8;
@@ -31,11 +33,13 @@ int time;                           // the variable used to set the Timer
 
 //Number of steps needed(used in timer)
 unsigned int num;
-int desired_Pan_Value = 4448;
-int Pan_high = 4548;
-int desired_Tilt_Value = 2888;
-int Tilt_high = 2988;
-int tolerance = 10;
+int desired_Pan_Value;
+int Pan_high;
+int Pan_low;
+int desired_Tilt_Value;
+int Tilt_high;
+int Tilt_low;
+int tolerance = 5 ;
 
 //Positions
 int current_xPos;
@@ -47,14 +51,14 @@ bool aval = 0;
 int encoder0PinZ  =  2;
 int encoder0PinA  =  3;
 int encoder0PinB  =  4;
-int encoder0pos = 4448;
-int offset0 = 44;
+int encoder0pos = centre_x;
+int offset0 = 4;
 
 int encoder1PinZ  =  5;
 int encoder1PinA  =  6;
 int encoder1PinB  =  7;
-int encoder1pos = 2888;
-int offset1 = 14;
+int encoder1pos = centre_y;
+int offset1 = -1;
 
 //Potentiometers
 int potentiometer0 = 0;
@@ -74,8 +78,8 @@ unsigned int movecount = 20;
 unsigned int movecount2 = 20;
 int timeval = 1000;
 unsigned int tdelay = 0;
-int tmin = 118;
-int tmax = 1600;
+int tmin = 200;
+int tmax = 1400;
 bool start_movement = 0;
 bool pacc = 0;
 bool tacc = 0;
@@ -83,6 +87,7 @@ int pmid = 0;
 int tmid = 0;
 bool pmove = 0;
 bool tmove = 0;
+int dance=0;
 
 //Bluetooth Setup
 BLEPeripheral blePeripheral;  // BLE Peripheral Device (the board you're programming)
@@ -133,6 +138,8 @@ void setup() {
   // begin advertising BLE service:
   blePeripheral.begin();
 
+  panset(centre_x);
+  tiltset(centre_y);
   //read_absolute_pos();
 }
 
@@ -146,14 +153,14 @@ void motorstep(int motor_select,int dir_select,bool dir){
 void timedBlinkIsr()   // callback function when interrupt is asserted
 {
   toggle = !toggle;
-  if (desired_Pan_Value>encoder0pos){
+  if (Pan_low>encoder0pos){
     motorstep(motor0,dir0,0);
   }
   else if(Pan_high<encoder0pos){
     motorstep(motor0,dir0,1);
   }
  
-  if (desired_Tilt_Value>encoder1pos){
+  if (Tilt_low>encoder1pos){
     motorstep(motor1,dir1,0);
   }
   else if(Tilt_high<encoder1pos){
@@ -255,15 +262,16 @@ void loop() {
           }
         }
         if(recieved_byte1==11){
+              
               desired_Pan_Value = encoder0pos + 40;
-              Pan_high = desired_Pan_Value+tolerance;
+              panset(desired_Pan_Value);
               time=500;
               CurieTimerOne.rdRstTickCount();
               CurieTimerOne.start(time,&timedBlinkIsr);
         }
         else if(recieved_byte1==12){
-              Pan_high = encoder0pos - 40;
-              desired_Pan_Value = Pan_high-tolerance;
+              desired_Pan_Value = encoder0pos - 40;
+              panset(desired_Pan_Value);
               time=500;
               CurieTimerOne.rdRstTickCount();
               CurieTimerOne.start(time,&timedBlinkIsr);
@@ -273,15 +281,16 @@ void loop() {
         }
         else if(recieved_byte1==21){
               desired_Tilt_Value = encoder1pos + 40;
+              tiltset(desired_Tilt_Value);
               Tilt_high = desired_Tilt_Value+tolerance;
               time=500;
               CurieTimerOne.rdRstTickCount();
               CurieTimerOne.start(time,&timedBlinkIsr);
         }
         else if(recieved_byte1==22){
-              Tilt_high = encoder1pos - 40;
-              desired_Tilt_Value = Tilt_high-tolerance;
-              time=500;
+              desired_Tilt_Value = encoder1pos - 40;
+              tiltset(desired_Tilt_Value);
+              time=600;
               CurieTimerOne.rdRstTickCount();
               CurieTimerOne.start(time,&timedBlinkIsr);
         }
@@ -289,20 +298,56 @@ void loop() {
          recieved_byte1=0;    
         }
 
+        else if(recieved_byte1==50){
+          time=800;
+          dance=dance%5;
+          //panset(4000);
+          switch(dance){
+             case 0:
+              if(movecount==0)
+                dance++;
+              tiltset(centre_x-1000);
+              panset(centre_y-1000);
+              break;
+             
+             case 1:
+             if(movecount==0)
+              dance++;
+              tiltset(centre_x+1000);
+              panset(centre_y-1000);
+              break;
+              
+             case 2:
+             if(movecount==0)
+              dance++;
+              panset(centre_x+1000);
+              tiltset(centre_y+1000);
+              break;
+
+             case 3:
+             if(movecount==0)
+              dance++;
+              panset(centre_x-1000);
+              tiltset(centre_y+1000);
+              break;
+              
+             default:
+              dance=0;
+              time=500;
+              CurieTimerOne.rdRstTickCount();
+              CurieTimerOne.start(time,&timedBlinkIsr);              
+          }
+        }
         else if(recieved_byte1==99){
-             Tilt_high = 2188;
-             desired_Tilt_Value = Tilt_high-tolerance;
-             Pan_high = 4448;
-             desired_Pan_Value = Pan_high-tolerance;
-             time=400;
+             panset(centre_x);
+             tiltset(centre_y);
+             time=500;
               CurieTimerOne.rdRstTickCount();
               CurieTimerOne.start(time,&timedBlinkIsr);              
         }
         else if(recieved_byte1==100){
-             Tilt_high = encoder1pos+tolerance;
-             desired_Tilt_Value = encoder1pos;
-             Pan_high = encoder0pos;
-             desired_Pan_Value = encoder0pos-tolerance;
+             panset(encoder0pos);
+             tiltset(encoder1pos);
              //time=400;
               CurieTimerOne.rdRstTickCount();
               //CurieTimerOne.start(time,&timedBlinkIsr);              
@@ -318,13 +363,15 @@ void loop() {
         if(recieved_byte1 == 1){
           desired_Pan_Value = num*pan_Gearratio;
           desired_Pan_Value += offset0*pan_Gearratio;
-          Pan_high = desired_Pan_Value+tolerance;
+        
+          panset(desired_Pan_Value);
           pmove = 1;
         }
         else if(recieved_byte1 == 2){
           desired_Tilt_Value = num*tilt_Gearratio;
           desired_Tilt_Value += offset1*tilt_Gearratio;
-          Tilt_high = desired_Tilt_Value+tolerance;
+          
+          tiltset(desired_Tilt_Value);
           tmove = 1;
         }
 
@@ -405,6 +452,18 @@ void debugprints1(){
   Serial.println("  ");
 }
 
+void panset(int pan){
+  desired_Pan_Value = pan;
+  Pan_low = desired_Pan_Value-tolerance;
+  Pan_high = desired_Pan_Value+tolerance;
+}
+
+void tiltset(int pan){
+  desired_Tilt_Value = pan;
+  Tilt_low = desired_Tilt_Value-tolerance;
+  Tilt_high = desired_Tilt_Value+tolerance;
+}
+
 void bhigh0(){
  //encoder0pos=abs(encoder0pos);
  aval=digitalRead(encoder0PinA);
@@ -472,3 +531,8 @@ void read_absolute_pos(){
   encoder0pos = panread+potentiometer0offset;
   //current_xPos = panread+potentiometer1offset;
 }
+
+void dancer(int p1,int p2, int p3){
+  
+}
+

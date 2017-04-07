@@ -58,13 +58,8 @@ void loop() {
 
   if (ledCharacteristic.written() ) {
     // update LED, either central has written to characteristic or button state has changed
-    if (ledCharacteristic.value()) {
-      Serial.println("LED on");
-      digitalWrite(ledPin, HIGH);
-    } else {
-      Serial.println("LED off");
-      digitalWrite(ledPin, LOW);
-    }
+    int a=ledCharacteristic.value();
+    Serial.println(a);
     //delay(2000);
     //ledCharacteristic.setValue(17);
   }

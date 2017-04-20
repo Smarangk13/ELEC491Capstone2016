@@ -3,7 +3,7 @@
 //  DynamicProjMount
 //
 //  Created by Mak R on 2017-03-27.
-//  Copyright © 2017 Nebojsa Petrovic. All rights reserved.
+//  Copyright © 2017 Mak R. All rights reserved.
 //
 
 import UIKit
